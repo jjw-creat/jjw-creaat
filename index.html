@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>线上自习室 - 和朋友一起学习</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .room-info {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .room-code {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .room-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 300px;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .timer-section, .stats-section, .friends-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .timer-display {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .time {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .session-status {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #56ab2f, #a8e6cf);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ffa726, #ff7043);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .friends-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .friend-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .friend-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .friend-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .friend-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .friend-status {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .friend-timer {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+        .status-studying {
+            background: #28a745;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-paused {
+            background: #ffc107;
+        }
+
+        .status-idle {
+            background: #6c757d;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .chat-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #eee;
+            border-radius: 20px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.own {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.other {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .message-system {
+            background: #d4edda;
+            color: #155724;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .timer-section {
+                order: 1;
+            }
+            
+            .stats-section {
+                order: 3;
+            }
+            
+            .friends-section {
+                order: 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .room-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .time {
+                font-size: 2.5rem;
+            }
+            
+            .control-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 线上自习室</h1>
+            <p>和朋友一起专注学习，共同进步</p>
+        </div>
+
+        <div class="room-info">
+            <div class="room-code">
+                房间号: <span id="roomCode">----</span>
+            </div>
+            <div class="room-actions">
+                <button class="btn btn-primary" id="createRoomBtn">创建房间</button>
+                <button class="btn btn-warning" id="joinRoomBtn">加入房间</button>
+                <button class="btn btn-success" id="shareRoomBtn" style="display: none;">分享房间</button>
+                <button class="btn btn-danger" id="leaveRoomBtn" style="display: none;">离开房间</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="timer-section fade-in">
+                <h2>⏰ 学习计时器</h2>
+                <div class="timer-display">
+                    <div class="time" id="timerDisplay">00:00:00</div>
+                    <div class="session-status" id="sessionStatus">准备开始学习</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div style="text-align: center; margin: 15px 0;">
+                        <label>今日目标: </label>
+                        <input type="number" id="dailyGoal" value="120" min="30" max="480" style="width: 80px; padding: 5px; border: 2px solid #667eea; border-radius: 10px; text-align: center;">
+                        <span>分钟</span>
+                    </div>
+                </div>
+                <div class="control-buttons">
+                    <button class="btn btn-primary" id="startBtn">开始学习</button>
+                    <button class="btn btn-danger" id="pauseBtn" disabled>暂停学习</button>
+                    <button class="btn btn-success" id="endBtn" disabled>结束学习</button>
+                </div>
+            </div>
+
+            <div class="stats-section fade-in">
+                <h2>📊 我的统计</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="todayTime">0</div>
+                        <div class="stat-label">今日学习(分钟)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="weekTime">0</div>
+                        <div class="stat-label">本周学习(小时)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalSessions">0</div>
+                        <div class="stat-label">总学习次数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgDuration">0</div>
+                        <div class="stat-label">平均时长(分钟)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="friends-section fade-in">
+                <h2>👥 学习伙伴</h2>
+                <div class="friends-list" id="friendsList">
+                    <div style="text-align: center; color: #999; padding: 40px;">
+                        加入房间后即可看到学习伙伴
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-section fade-in">
+            <h2>💬 学习交流</h2>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message system">欢迎来到线上自习室！在这里你可以和朋友一起学习进步。</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="输入消息，按Enter发送...">
+                <button class="btn btn-primary" id="sendBtn">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建/加入房间模态框 -->
+    <div class="modal" id="roomModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">创建房间</h3>
+            <div class="input-group">
+                <label for="userName">你的昵称:</label>
+                <input type="text" id="userName" placeholder="请输入昵称" maxlength="10">
+            </div>
+            <div class="input-group" id="roomCodeGroup" style="display: none;">
+                <label for="roomCodeInput">房间号:</label>
+                <input type="text" id="roomCodeInput" placeholder="请输入房间号">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button class="btn btn-primary" id="modalConfirm">确定</button>
+                <button class="btn btn-secondary" id="modalCancel">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class CollaborativeStudyRoom {
+            constructor() {
+                this.isStudying = false;
+                this.isPaused = false;
+                this.startTime = null;
+                this.pauseTime = null;
+                this.totalPauseDuration = 0;
+                this.seconds = 0;
+                this.timer = null;
+                
+                this.currentRoom = null;
+                this.userName = '';
+                this.userId = this.generateUserId();
+                this.friends = new Map();
+                this.messages = [];
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.loadPersonalData();
+                this.updateStats();
+                this.startMotivationRotation();
+                
+                // 模拟实时同步（实际应用中需要WebSocket服务器）
+                this.simulateRealTimeSync();
+            }
+
+            initializeElements() {
+                // 计时器元素
+                this.timerDisplay = document.getElementById('timerDisplay');
+                this.sessionStatus = document.getElementById('sessionStatus');
+                this.startBtn = document.getElementById('startBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.endBtn = document.getElementById('endBtn');
+                this.progressFill = document.getElementById('progressFill');
+                this.dailyGoal = document.getElementById('dailyGoal');
+                
+                // 房间元素
+                this.roomCode = document.getElementById('roomCode');
+                this.createRoomBtn = document.getElementById('createRoomBtn');
+                this.joinRoomBtn = document.getElementById('joinRoomBtn');
+                this.shareRoomBtn = document.getElementById('shareRoomBtn');
+                this.leaveRoomBtn = document.getElementById('leaveRoomBtn');
+                
+                // 其他元素
+                this.friendsList = document.getElementById('friendsList');
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                
+                // 模态框元素
+                this.roomModal = document.getElementById('roomModal');
+                this.modalTitle = document.getElementById('modalTitle');
+                this.userNameInput = document.getElementById('userName');
+                this.roomCodeInput = document.getElementById('roomCodeInput');
+                this.roomCodeGroup = document.getElementById('roomCodeGroup');
+                this.modalConfirm = document.getElementById('modalConfirm');
+                this.modalCancel = document.getElementById('modalCancel');
+            }
+
+            bindEvents() {
+                // 计时器事件
+                this.startBtn.addEventListener('click', () => this.startStudy());
+                this.pauseBtn.addEventListener('click', () => this.togglePause());
+                this.endBtn.addEventListener('click', () => this.endStudy());
+                this.dailyGoal.addEventListener('change', () => this.updateProgress());
+                
+                // 房间事件
+                this.createRoomBtn.addEventListener('click', () => this.showCreateRoomModal());
+                this.joinRoomBtn.addEventListener('click', () => this.showJoinRoomModal());
+                this.shareRoomBtn.addEventListener('click', () => this.shareRoom());
+                this.leaveRoomBtn.addEventListener('click', () => this.leaveRoom());
+                
+                // 聊天事件
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+                
+                // 模态框事件
+                this.modalConfirm.addEventListener('click', () => this.handleModalConfirm());
+                this.modalCancel.addEventListener('click', () => this.hideModal());
+                
+                // 点击模态框外部关闭
+                this.roomModal.addEventListener('click', (e) => {
+                    if (e.target === this.roomModal) this.hideModal();
+                });
+            }
+
+            // 房间管理
+            showCreateRoomModal() {
+                this.modalTitle.textContent = '创建房间';
+                this.roomCodeGroup.style.display = 'none';
+                this.roomModal.style.display = 'block';
+                this.userNameInput.focus();
+            }
+
+            showJoinRoomModal() {
+                this.modalTitle.textContent = '加入房间';
+                this.roomCodeGroup.style.display = 'block';
+                this.roomModal.style.display = 'block';
+                this.userNameInput.focus();
+            }
+
+            hideModal() {
+                this.roomModal.style.display = 'none';
+                this.userNameInput.value = '';
+                this.roomCodeInput.value = '';
+            }
+
+            handleModalConfirm() {
+                const userName = this.userNameInput.value.trim();
+                if (!userName) {
+                    alert('请输入昵称');
+                    return;
+                }
+
+                this.userName = userName;
+                
+                if (this.modalTitle.textContent === '创建房间') {
+                    this.createRoom();
+                } else {
+                    this.joinRoom();
+                }
+                
+                this.hideModal();
+            }
+
+            createRoom() {
+                this.currentRoom = this.generateRoomCode();
+                this.roomCode.textContent = this.currentRoom;
+                
+                // 更新UI
+                this.createRoomBtn.style.display = 'none';
+                this.joinRoomBtn.style.display = 'none';
+                this.shareRoomBtn.style.display = 'inline-block';
+                this.leaveRoomBtn.style.display = 'inline-block';
+                
+                // 添加自己到好友列表
+                this.addFriend(this.userId, this.userName, 'idle', 0);
+                
+                this.addSystemMessage(`你创建了房间 ${this.currentRoom}`);
+                this.saveRoomData();
+            }
+
+            joinRoom() {
+                const roomCode = this.roomCodeInput.value.trim().toUpperCase();
+                if (!roomCode) {
+                    alert('请输入房间号');
+                    return;
+                }
+
+                this.currentRoom = roomCode;
+                this.roomCode.textContent = this.currentRoom;
+                
+                // 更新UI
+                this.createRoomBtn.style.display = 'none';
+                this.joinRoomBtn.style.display = 'none';
+                this.shareRoomBtn.style.display = 'inline-block';
+                this.leaveRoomBtn.style.display = 'inline-block';
+                
+                // 添加自己到好友列表
+                this.addFriend(this.userId, this.userName, 'idle', 0);
+                
+                this.addSystemMessage(`你加入了房间 ${this.currentRoom}`);
+                this.saveRoomData();
+                
+                // 模拟加入房间的通知
+                setTimeout(() => {
+                    this.addSystemMessage(`欢迎 ${this.userName} 加入房间！`);
+                }, 1000);
+            }
+
+            leaveRoom() {
+                if (confirm('确定要离开房间吗？')) {
+                    this.addSystemMessage(`${this.userName} 离开了房间`);
+                    
+                    this.currentRoom = null;
+                    this.friends.clear();
+                    this.messages = [];
+                    
+                    // 更新UI
+                    this.roomCode.textContent = '----';
+                    this.createRoomBtn.style.display = 'inline-block';
+                    this.joinRoomBtn.style.display = 'inline-block';
+                    this.shareRoomBtn.style.display = 'none';
+                    this.leaveRoomBtn.style.display = 'none';
+                    
+                    this.friendsList.innerHTML = `
+                        <div style="text-align: center; color: #999; padding: 40px;">
+                            加入房间后即可看到学习伙伴
+                        </div>
+                    `;
+                    
+                    this.chatMessages.innerHTML = `
+                        <div class="message system">欢迎来到线上自习室！在这里你可以和朋友一起学习进步。</div>
+                    `;
+                    
+                    localStorage.removeItem('currentRoom');
+                    localStorage.removeItem('roomFriends');
+                    localStorage.removeItem('roomMessages');
+                }
+            }
+
+            shareRoom() {
+                const shareText = `快来和我一起学习吧！房间号：${this.currentRoom}`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: '线上自习室',
+                        text: shareText,
+                        url: window.location.href
+                    });
+                } else {
+                    // 复制到剪贴板
+                    navigator.clipboard.writeText(shareText).then(() => {
+                        alert('房间号已复制到剪贴板！');
+                    }).catch(() => {
+                        prompt('复制以下内容分享给朋友：', shareText);
+                    });
+                }
+            }
+
+            // 好友管理
+            addFriend(id, name, status, studyTime) {
+                this.friends.set(id, {
+                    id,
+                    name,
+                    status,
+                    studyTime,
+                    lastUpdate: Date.now()
+                });
+                this.updateFriendsList();
+            }
+
+            updateFriendStatus(id, status, studyTime) {
+                const friend = this.friends.get(id);
+                if (friend) {
+                    friend.status = status;
+                    friend.studyTime = studyTime;
+                    friend.lastUpdate = Date.now();
+                    this.updateFriendsList();
+                }
+            }
+
+            removeFriend(id) {
+                this.friends.delete(id);
+                this.updateFriendsList();
+            }
+
+            updateFriendsList() {
+                if (this.friends.size === 0) {
+                    this.friendsList.innerHTML = `
+                        <div style="text-align: center; color: #999; padding: 40px;">
+                            加入房间后即可看到学习伙伴
+                        </div>
+                    `;
+                    return;
+                }
+
+                const friendsArray = Array.from(this.friends.values());
+                this.friendsList.innerHTML = friendsArray.map(friend => {
+                    const timeStr = this.formatTime(friend.studyTime);
+                    const statusClass = `status-${friend.status}`;
+                    const statusText = this.getStatusText(friend.status);
+                    
+                    return `
+                        <div class="friend-item">
+                            <div class="friend-avatar">${friend.name.charAt(0)}</div>
+                            <div class="friend-info">
+                                <div class="friend-name">${friend.name}</div>
+                                <div class="friend-status">${statusText}</div>
+                            </div>
+                            <div style="display: flex; align-items: center;">
+                                <div class="friend-timer">${timeStr}</div>
+                                <div class="status-indicator ${statusClass}"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            getStatusText(status) {
+                const statusMap = {
+                    'studying': '正在学习',
+                    'paused': '已暂停',
+                    'idle': '休息中'
+                };
+                return statusMap[status] || '离线';
+            }
+
+            // 学习功能
+            startStudy() {
+                this.isStudying = true;
+                this.isPaused = false;
+                this.startTime = new Date();
+                this.totalPauseDuration = 0;
+                this.seconds = 0;
+                
+                this.startBtn.disabled = true;
+                this.pauseBtn.disabled = false;
+                this.endBtn.disabled = false;
+                this.pauseBtn.textContent = '暂停学习';
+                
+                this.sessionStatus.textContent = '正在学习中...';
+                this.timerDisplay.style.color = '#28a745';
+                
+                this.startTimer();
+                this.updateFriendStatus(this.userId, 'studying', this.seconds);
+                this.addSystemMessage(`${this.userName} 开始学习了！`);
+                this.savePersonalData();
+            }
+
+            togglePause() {
+                if (this.isPaused) {
+                    this.isPaused = false;
+                    const pauseEndTime = new Date();
+                    this.totalPauseDuration += (pauseEndTime - this.pauseTime);
+                    this.pauseBtn.textContent = '暂停学习';
+                    this.sessionStatus.textContent = '正在学习中...';
+                    this.timerDisplay.style.color = '#28a745';
+                    this.updateFriendStatus(this.userId, 'studying', this.seconds);
+                    this.startTimer();
+                } else {
+                    this.isPaused = true;
+                    this.pauseTime = new Date();
+                    this.pauseBtn.textContent = '继续学习';
+                    this.sessionStatus.textContent = '学习已暂停';
+                    this.timerDisplay.style.color = '#ffc107';
+                    this.updateFriendStatus(this.userId, 'paused', this.seconds);
+                    this.stopTimer();
+                }
+                this.savePersonalData();
+            }
+
+            endStudy() {
+                if (!this.isStudying) return;
+                
+                this.isStudying = false;
+                this.isPaused = false;
+                this.stopTimer();
+                
+                const endTime = new Date();
+                const actualDuration = Math.floor((endTime - this.startTime - this.totalPauseDuration) / 1000);
+                
+                if (actualDuration > 0) {
+                    const session = {
+                        id: Date.now(),
+                        startTime: this.startTime.toISOString(),
+                        endTime: endTime.toISOString(),
+                        duration: actualDuration,
+                        date: this.startTime.toLocaleDateString(),
+                        status: 'completed'
+                    };
+                    
+                    this.saveSession(session);
+                    const durationMinutes = Math.floor(actualDuration / 60);
+                    this.addSystemMessage(`${this.userName} 完成了 ${durationMinutes} 分钟的学习！`);
+                }
+                
+                this.updateFriendStatus(this.userId, 'idle', 0);
+                this.resetUI();
+                this.savePersonalData();
+                this.updateStats();
+            }
+
+            startTimer() {
+                this.timer = setInterval(() => {
+                    this.seconds++;
+                    this.updateTimerDisplay();
+                    this.updateProgress();
+                    
+                    // 每30秒更新一次好友状态
+                    if (this.seconds % 30 === 0) {
+                        this.updateFriendStatus(this.userId, 'studying', this.seconds);
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+            }
+
+            updateTimerDisplay() {
+                const hours = Math.floor(this.seconds / 3600);
+                const minutes = Math.floor((this.seconds % 3600) / 60);
+                const secs = this.seconds % 60;
+                
+                this.timerDisplay.textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            updateProgress() {
+                const goalMinutes = parseInt(this.dailyGoal.value);
+                const currentMinutes = Math.floor(this.seconds / 60);
+                const progress = Math.min((currentMinutes / goalMinutes) * 100, 100);
+                this.progressFill.style.width = `${progress}%`;
+            }
+
+            resetUI() {
+                this.seconds = 0;
+                this.updateTimerDisplay();
+                this.updateProgress();
+                
+                this.startBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                this.endBtn.disabled = true;
+                this.pauseBtn.textContent = '暂停学习';
+                
+                this.sessionStatus.textContent = '学习已结束，休息一下吧！';
+                this.timerDisplay.style.color = '#667eea';
+            }
+
+            formatTime(seconds) {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                
+                if (hours > 0) {
+                    return `${hours}h${minutes}m`;
+                } else {
+                    return `${minutes}m`;
+                }
+            }
+
+            // 聊天功能
+            sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message) return;
+                
+                this.addChatMessage(this.userName, message, 'own');
+                this.chatInput.value = '';
+                
+                // 模拟其他用户回复（实际应用中需要服务器）
+                if (this.friends.size > 1) {
+                    setTimeout(() => {
+                        const otherFriends = Array.from(this.friends.values()).filter(f => f.id !== this.userId);
+                        if (otherFriends.length > 0) {
+                            const randomFriend = otherFriends[Math.floor(Math.random() * otherFriends.length)];
+                            const responses = [
+                                '加油！我们一起努力！',
+                                '很棒！继续专注！',
+                                '我也在认真学习呢',
+                                '一起进步！',
+                                '保持专注！'
+                            ];
+                            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                            this.addChatMessage(randomFriend.name, randomResponse, 'other');
+                        }
+                    }, 2000);
+                }
+            }
+
+            addChatMessage(sender, content, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}`;
+                messageDiv.innerHTML = `<strong>${sender}:</strong> ${content}`;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+                
+                // 保存消息
+                this.messages.push({
+                    sender,
+                    content,
+                    type,
+                    timestamp: Date.now()
+                });
+                
+                // 限制消息数量
+                if (this.messages.length > 50) {
+                    this.messages.shift();
+                }
+                
+                this.saveRoomData();
+            }
+
+            addSystemMessage(content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message system';
+                messageDiv.textContent = content;
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+                
+                this.messages.push({
+                    sender: '系统',
+                    content,
+                    type: 'system',
+                    timestamp: Date.now()
+                });
+                
+                this.saveRoomData();
+            }
+
+            // 数据持久化
+            generateUserId() {
+                let userId = localStorage.getItem('studyUserId');
+                if (!userId) {
+                    userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('studyUserId', userId);
+                }
+                return userId;
+            }
+
+            generateRoomCode() {
+                return Math.random().toString(36).substr(2, 6).toUpperCase();
+            }
+
+            savePersonalData() {
+                const data = {
+                    isStudying: this.isStudying,
+                    isPaused: this.isPaused,
+                    startTime: this.startTime ? this.startTime.toISOString() : null,
+                    pauseTime: this.pauseTime ? this.pauseTime.toISOString() : null,
+                    totalPauseDuration: this.totalPauseDuration,
+                    seconds: this.seconds
+                };
+                localStorage.setItem('studyRoomState', JSON.stringify(data));
+            }
+
+            loadPersonalData() {
+                const data = JSON.parse(localStorage.getItem('studyRoomState') || 'null');
+                if (data && data.isStudying) {
+                    this.isStudying = true;
+                    this.isPaused = data.isPaused;
+                    this.startTime = new Date(data.startTime);
+                    this.pauseTime = data.pauseTime ? new Date(data.pauseTime) : null;
+                    this.totalPauseDuration = data.totalPauseDuration || 0;
+                    this.seconds = data.seconds || 0;
+                    
+                    if (this.isPaused) {
+                        this.pauseBtn.textContent = '继续学习';
+                        this.sessionStatus.textContent = '学习已暂停';
+                        this.timerDisplay.style.color = '#ffc107';
+                    } else {
+                        this.startTimer();
+                        this.sessionStatus.textContent = '正在学习中...';
+                        this.timerDisplay.style.color = '#28a745';
+                    }
+                    
+                    this.startBtn.disabled = true;
+                    this.pauseBtn.disabled = false;
+                    this.endBtn.disabled = false;
+                    
+                    this.updateTimerDisplay();
+                    this.updateProgress();
+                }
+            }
+
+            saveRoomData() {
+                if (this.currentRoom) {
+                    localStorage.setItem('currentRoom', this.currentRoom);
+                    localStorage.setItem('roomFriends', JSON.stringify(Array.from(this.friends.entries())));
+                    localStorage.setItem('roomMessages', JSON.stringify(this.messages));
+                }
+            }
+
+            loadRoomData() {
+                const savedRoom = localStorage.getItem('currentRoom');
+                if (savedRoom) {
+                    this.currentRoom = savedRoom;
+                    this.roomCode.textContent = this.currentRoom;
+                    
+                    // 更新UI
+                    this.createRoomBtn.style.display = 'none';
+                    this.joinRoomBtn.style.display = 'none';
+                    this.shareRoomBtn.style.display = 'inline-block';
+                    this.leaveRoomBtn.style.display = 'inline-block';
+                    
+                    // 加载好友数据
+                    const savedFriends = localStorage.getItem('roomFriends');
+                    if (savedFriends) {
+                        const friendsArray = JSON.parse(savedFriends);
+                        friendsArray.forEach(([id, friend]) => {
+                            this.friends.set(id, friend);
+                        });
+                        this.updateFriendsList();
+                    }
+                    
+                    // 加载消息
+                    const savedMessages = localStorage.getItem('roomMessages');
+                    if (savedMessages) {
+                        this.messages = JSON.parse(savedMessages);
+                        this.chatMessages.innerHTML = '';
+                        this.messages.forEach(msg => {
+                            this.addChatMessage(msg.sender, msg.content, msg.type);
+                        });
+                    }
+                }
+            }
+
+            saveSession(session) {
+                let sessions = JSON.parse(localStorage.getItem('studySessions') || '[]');
+                sessions.unshift(session);
+                if (sessions.length > 100) {
+                    sessions = sessions.slice(0, 100);
+                }
+                localStorage.setItem('studySessions', JSON.stringify(sessions));
+            }
+
+            updateStats() {
+                const sessions = JSON.parse(localStorage.getItem('studySessions') || '[]');
+                const today = new Date().toLocaleDateString();
+                const weekStart = this.getWeekStart();
+                
+                let todayMinutes = 0;
+                let weekMinutes = 0;
+                let totalDuration = 0;
+                
+                sessions.forEach(session => {
+                    const sessionDate = new Date(session.startTime).toLocaleDateString();
+                    const durationMinutes = Math.floor(session.duration / 60);
+                    
+                    totalDuration += durationMinutes;
+                    
+                    if (sessionDate === today) {
+                        todayMinutes += durationMinutes;
+                    }
+                    
+                    if (new Date(session.startTime) >= weekStart) {
+                        weekMinutes += durationMinutes;
+                    }
+                });
+                
+                document.getElementById('todayTime').textContent = todayMinutes;
+                document.getElementById('weekTime').textContent = Math.round(weekMinutes / 60 * 10) / 10;
+                document.getElementById('totalSessions').textContent = sessions.length;
+                document.getElementById('avgDuration').textContent = 
+                    sessions.length > 0 ? Math.round(totalDuration / sessions.length) : 0;
+            }
+
+            getWeekStart() {
+                const now = new Date();
+                const day = now.getDay();
+                const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+                return new Date(now.setDate(diff));
+            }
+
+            // 模拟实时同步
+            simulateRealTimeSync() {
+                // 每5秒模拟好友状态更新
+                setInterval(() => {
+                    if (this.currentRoom && this.friends.size > 1) {
+                        const friendsArray = Array.from(this.friends.values()).filter(f => f.id !== this.userId);
+                        friendsArray.forEach(friend => {
+                            // 随机更新好友状态（实际应用中需要WebSocket）
+                            if (Math.random() < 0.1) {
+                                const statuses = ['studying', 'paused', 'idle'];
+                                const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                                let studyTime = friend.studyTime;
+                                
+                                if (randomStatus === 'studying') {
+                                    studyTime += Math.floor(Math.random() * 60) + 30;
+                                } else if (randomStatus === 'idle') {
+                                    studyTime = 0;
+                                }
+                                
+                                this.updateFriendStatus(friend.id, randomStatus, studyTime);
+                            }
+                        });
+                    }
+                }, 5000);
+            }
+
+            startMotivationRotation() {
+                const quotes = [
+                    '"成功的秘诀在于对目标的执着追求。"',
+                    '"今天的努力是明天的实力。"',
+                    '"专注当下，成就未来。"',
+                    '"每一次坚持都是对梦想的承诺。"',
+                    '"学习是最值得的投资。"',
+                    '"知识改变命运，学习成就梦想。"',
+                    '"今天的汗水是明天的收获。"',
+                    '"保持专注，你比想象中更强大。"'
+                ];
+                
+                let index = 0;
+                setInterval(() => {
+                    // 可以在这里添加励志语录轮换
+                    index = (index + 1) % quotes.length;
+                }, 10000);
+            }
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new CollaborativeStudyRoom();
+            app.loadRoomData();
+        });
+
+        // 页面卸载时保存状态
+        window.addEventListener('beforeunload', () => {
+            // 保存状态已在其他方法中处理
+        });
+    </script>
+</body>
+</html>
